@@ -1,14 +1,20 @@
-const CACHE = 'japan-trip-v1';
+const CACHE = 'japan-trip-v2';
 const URLS = ['index.html', 'app.html', 'manifest.json'];
 
 self.addEventListener('install', e => {
+  self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(URLS)).then(() => self.skipWaiting())
+    caches.open(CACHE).then(c => c.addAll(URLS))
   );
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
+  e.waitUntil(Promise.all([
+    clients.claim(),
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+    ))
+  ]));
 });
 
 self.addEventListener('fetch', e => {
