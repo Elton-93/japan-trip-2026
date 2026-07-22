@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="日本之旅2026">
+<title>日本之旅 2026</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f0f1a;
+  --surface:#1a1a2e;
+  --surface2:#16213e;
+  --primary:#e63946;
+  --accent:#f4a261;
+  --gold:#d4af37;
+  --text:#eaeaea;
+  --text2:#a0a0b8;
+  --card-bg:#1e1e36;
+  --card-border:#2a2a4a;
+  --success:#2ecc71;
+  --info:#3498db;
+  --day-height:calc(100vh - 120px);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;width:100vw;position:fixed}
+#app{display:flex;flex-direction:column;height:100vh;width:100vw}
+
+/* Header */
+.header{
+  flex-shrink:0;
+  padding:12px 16px 8px;
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  border-bottom:1px solid var(--card-border);
+  position:relative;z-index:10
+}
+.header-top{display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:700;letter-spacing:1px}
+.header h1 span{color:var(--accent)}
+.header .date-range{font-size:11px;color:var(--text2);margin-top:2px}
+.header .trip-progress{font-size:11px;color:var(--accent);background:rgba(244,162,97,0.12);padding:2px 10px;border-radius:12px;}
+.badge{display:inline-block;background:var(--primary);color:#fff;font-size:10px;padding:1px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
+
+/* Tabs */
+.tabs{
+  flex-shrink:0;
+  display:flex;
+  overflow-x:auto;
+  gap:0;
+  padding:0 8px;
+  background:var(--surface);
+  border-bottom:1px solid var(--card-border);
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex-shrink:0;
+  padding:10px 14px;
+  font-size:12px;
+  color:var(--text2);
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all 0.2s;
+  white-space:nowrap;
+  position:relative;
+  user-select:none;
+}
+.tab .day-num{font-weight:600;font-size:13px;display:block;text-align:center}
+.tab .day-date{font-size:9px;opacity:0.7;display:block;text-align:center;margin-top:1px}
+.tab .tab-emoji{font-size:14px;display:block;text-align:center}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab.active .day-num{color:#fff}
+.tab:active{opacity:0.7}
+
+/* Content area */
+.content-wrapper{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+}
+.content-slider{
+  display:flex;
+  height:100%;
+  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  will-change:transform;
+}
+.day-page{
+  flex-shrink:0;
+  width:100%;
+  height:100%;
+  overflow-y:auto;
+  padding:12px 16px 80px;
+  -webkit-overflow-scrolling:touch;
+}
+.day-page::-webkit-scrollbar{width:3px}
+.day-page::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:3px}
+
+/* Day header */
+.day-header{margin-bottom:14px}
+.day-header .day-title{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.day-header .day-title .emoji{font-size:24px}
+.day-header .day-sub{font-size:12px;color:var(--text2);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.day-header .day-sub span{display:inline-flex;align-items:center;gap:4px}
+.day-header .day-sub .icon{font-size:12px}
+
+/* Timeline */
+.timeline{position:relative;padding-left:20px}
+.timeline::before{
+  content:'';
+  position:absolute;left:6px;top:6px;bottom:6px;
+  width:2px;background:var(--card-border);
+}
+
+.timeline-item{
+  position:relative;
+  padding:0 0 16px 14px;
+  border-left:2px solid transparent;
+}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-item::before{
+  content:'';
+  position:absolute;
+  left:-17px;top:6px;
+  width:10px;height:10px;
+  border-radius:50%;
+  background:var(--card-border);
+  border:2px solid var(--bg);
+  z-index:1;
+}
+.timeline-item.highlight::before{background:var(--accent);border-color:var(--accent)}
+.timeline-item.primary::before{background:var(--primary);border-color:var(--primary)}
+.timeline-item.success::before{background:var(--success);border-color:var(--success)}
+.timeline-item.info::before{background:var(--info);border-color:var(--info)}
+
+.item-time{font-size:11px;color:var(--accent);font-weight:600;margin-bottom:2px}
+.item-activity{font-size:14px;font-weight:600;line-height:1.4;margin-bottom:2px}
+.item-activity .emoji{font-size:16px;margin-right:4px}
+.item-detail{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:3px}
+.item-transport{
+  font-size:11px;color:var(--info);
+  background:rgba(52,152,219,0.08);
+  padding:2px 8px;border-radius:4px;
+  display:inline-block;margin-top:2px;
+}
+.item-cost{
+  font-size:11px;color:var(--success);
+  background:rgba(46,204,113,0.08);
+  padding:2px 8px;border-radius:4px;
+  display:inline-block;margin-top:2px;margin-left:4px;
+}
+.item-tip{
+  font-size:11px;color:var(--gold);
+  background:rgba(212,175,55,0.08);
+  padding:4px 8px;border-radius:6px;
+  margin-top:4px;line-height:1.5;
+}
+
+/* Info card */
+.info-card{
+  background:var(--card-bg);
+  border:1px solid var(--card-border);
+  border-radius:10px;
+  padding:12px;
+  margin:12px 0 16px;
+}
+.info-card .info-title{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.info-card .info-row{font-size:12px;color:var(--text2);padding:3px 0;display:flex;justify-content:space-between}
+.info-card .info-row .label{color:var(--text2)}
+.info-card .info-row .value{color:var(--text);font-weight:500}
+
+/* Day summary card */
+.day-summary{
+  background:var(--surface2);
+  border-radius:10px;
+  padding:10px 12px;
+  margin-top:16px;
+  display:flex;flex-wrap:wrap;gap:6px;
+}
+.day-summary .tag{
+  font-size:10px;
+  padding:3px 10px;
+  border-radius:12px;
+  background:var(--card-bg);
+  color:var(--text2);
+  display:inline-flex;align-items:center;gap:4px;
+}
+.day-summary .tag.transport{background:rgba(52,152,219,0.12);color:var(--info)}
+.day-summary .tag.cost{background:rgba(46,204,113,0.12);color:var(--success)}
+.day-summary .tag.hotel{background:rgba(244,162,97,0.12);color:var(--accent)}
+.day-summary .tag.warn{background:rgba(230,57,70,0.12);color:var(--primary)}
+
+/* Bottom nav */
+.bottom-nav{
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 16px;
+  background:var(--surface);
+  border-top:1px solid var(--card-border);
+  z-index:10;
+}
+.nav-btn{
+  background:var(--card-bg);
+  border:1px solid var(--card-border);
+  color:var(--text);
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:12px;
+  cursor:pointer;
+  display:flex;align-items:center;gap:4px;
+  transition:all 0.2s;
+  user-select:none;
+}
+.nav-btn:active{transform:scale(0.95);opacity:0.7}
+.nav-btn:disabled{opacity:0.3;pointer-events:none}
+.nav-btn .arr{font-size:14px}
+.nav-info{font-size:11px;color:var(--text2);text-align:center}
+.nav-info strong{color:var(--accent);font-weight:600}
+
+/* Install banner */
+.install-banner{
+  position:fixed;bottom:60px;left:0;right:0;
+  background:linear-gradient(135deg,#2a1a3e,#1a2a4e);
+  padding:10px 16px;
+  display:none;
+  align-items:center;justify-content:space-between;
+  z-index:20;
+  border-top:1px solid var(--card-border);
+  animation:fadeInUp 0.3s ease;
+}
+.install-banner.show{display:flex}
+.install-banner .text{font-size:12px;flex:1}
+.install-banner .btn{
+  background:var(--primary);
+  color:#fff;border:none;
+  padding:6px 14px;border-radius:6px;
+  font-size:12px;cursor:pointer;
+  margin-left:8px;
+}
+.install-banner .close{
+  background:none;border:none;
+  color:var(--text2);font-size:18px;
+  cursor:pointer;margin-left:6px;
+}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Schedule note (hotel/transport summary) */
+.schedule-note{
+  background:linear-gradient(135deg,rgba(244,162,97,0.06),rgba(230,57,70,0.06));
+  border:1px solid rgba(244,162,97,0.15);
+  border-radius:10px;
+  padding:10px 12px;
+  margin-bottom:12px;
+  font-size:12px;line-height:1.6;
+  color:var(--text2);
+}
+.schedule-note strong{color:var(--text)}
+.schedule-note .hl{color:var(--accent)}
+
+/* Splash screen */
+.splash{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+  transition:opacity 0.5s ease;
+}
+.splash.hide{opacity:0;pointer-events:none}
+.splash .logo{font-size:48px;margin-bottom:16px;animation:pulse 2s infinite}
+.splash h2{font-size:22px;color:var(--accent);margin-bottom:4px}
+.splash p{font-size:13px;color:var(--text2)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+/* Loading dots */
+.splash .dots{margin-top:20px;display:flex;gap:6px}
+.splash .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);
+  animation:dotPulse 1.4s infinite ease-in-out both;
+}
+.splash .dot:nth-child(1){animation-delay:-0.32s}
+.splash .dot:nth-child(2){animation-delay:-0.16s}
+.splash .dot:nth-child(3){animation-delay:0s}
+@keyframes dotPulse{0%,80%,100%{transform:scale(0.5)}40%{transform:scale(1)}}
+
+/* Toast */
+.toast{
+  position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  background:var(--surface2);
+  border:1px solid var(--card-border);
+  color:var(--text);
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:12px;
+  z-index:50;
+  opacity:0;
+  transition:opacity 0.3s;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.toast.show{opacity:1}
+
+/* Responsive - landscape tablets */
+@media(min-width:768px){
+  .day-page{padding:20px 32px 80px;max-width:700px;margin:0 auto}
+  .tabs{padding:0 16px;justify-content:center}
+  .header{padding:16px 32px}
+}
+
+/* Dark mode refinements */
+@media(prefers-color-scheme:light){
+  :root{
+    --bg:#f5f5f5;
+    --surface:#ffffff;
+    --surface2:#f0f0f5;
+    --text:#1a1a2e;
+    --text2:#6c6c80;
+    --card-bg:#ffffff;
+    --card-border:#e0e0e8;
+  }
+  .header{background:linear-gradient(135deg,#1a1a2e 0%,#2a2a4e 100%)}
+  .header h1,.header .date-range{color:#fff}
+  .header .trip-progress{color:var(--accent)}
+}
+
+/* Swipe indicator */
+.swipe-indicator{
+  text-align:center;font-size:10px;color:var(--text2);
+  padding:4px 0 0;opacity:0.5;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>🗾 <span>日本之旅</span> 2026</h1>
+        <div class="date-range">7/27（一）- 8/7（五） · 12天11晚</div>
+      </div>
+      <div class="trip-progress" id="dayProgress">Day 1 / 12</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabs"></div>
+
+  <!-- Content -->
+  <div class="content-wrapper" id="contentWrapper">
+    <div class="swipe-indicator">← 左右滑动切换日期 →</div>
+    <div class="content-slider" id="contentSlider"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-btn" id="prevBtn">‹ 前一天</button>
+    <div class="nav-info" id="navInfo">第 <strong>1</strong> 天</div>
+    <button class="nav-btn" id="nextBtn">后一天 ›</button>
+  </div>
+</div>
+
+<!-- Install Banner -->
+<div class="install-banner" id="installBanner">
+  <span class="text">📲 添加到主屏幕，离线随时查看</span>
+  <button class="btn" id="installBtn">安装</button>
+  <button class="close" id="installClose">✕</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Splash -->
+<div class="splash" id="splash">
+  <div class="logo">🗾</div>
+  <h2>日本之旅 2026</h2>
+  <p>加载行程中...</p>
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+</div>
+
+<script>
+// ====== DATA ======
+const DAYS = [
+  {
+    day:1,date:"7/27",weekday:"一",emoji:"✈️",title:"抵达大阪",
+    location:"🏙️ 大阪",hotel:"大阪（难波/心斋桥区域）",
+    note:"21:00到关西机场，当晚只做入住休整",
+    summary:{transport:"¥970",hotel:"大阪 1晚"},
+    items:[
+      {time:"21:00",activity:"✈️ 到达关西机场（KIX）",detail:"入境·取行李",transport:"",cost:""},
+      {time:"22:00-22:30",activity:"🚃 前往大阪市区",detail:"南海电铁空港急行 or 关空快速",transport:"¥970",cost:""},
+      {time:"23:00",activity:"🏨 酒店入住",detail:"便利店买点宵夜，早点休息",transport:"",cost:""},
+    ]
+  },
+  {
+    day:2,date:"7/28",weekday:"二",emoji:"🏯",title:"京都东线精华",
+    location:"🏯 京都",hotel:"京都",
+    note:"京都经典一日：清水寺→东福寺→伏见稻荷",
+    summary:{transport:"¥1,480",hotel:"京都 2晚（连住）"},
+    items:[
+      {time:"8:30-9:00",activity:"🚃 大阪→京都",detail:"JR新快速 30min",transport:"¥580",cost:""},
+      {time:"9:00-9:30",activity:"🛅 京都站寄放行李",detail:"coin locker",transport:"",cost:""},
+      {time:"9:30-11:30",activity:"🏯 清水寺 ¥400",detail:"参道→二年坂散步→地主神社",transport:"巴士/步行",cost:"¥400"},
+      {time:"11:30-12:30",activity:"🍜 午餐",detail:"抹茶甜品/汤豆腐",transport:"",cost:""},
+      {time:"12:30-13:30",activity:"🏯 东福寺 ¥400",detail:"通天桥+国宝三门",transport:"步行/京阪电车",cost:"¥400"},
+      {time:"13:30-14:00",activity:"🚃 东福寺→稻荷",detail:"JR奈良线 1站",transport:"¥150",cost:""},
+      {time:"14:00-16:30",activity:"⛩️ 伏见稻荷大社",detail:"千本鸟居（免费）",transport:"",cost:""},
+      {time:"16:30-17:00",activity:"🚃 稻荷→京都站",transport:"¥150",cost:""},
+      {time:"17:00",activity:"🏨 酒店入住",detail:"晚餐",transport:"",cost:""},
+    ]
+  },
+  {
+    day:3,date:"7/29",weekday:"三",emoji:"🦌",title:"奈良一日游",
+    location:"🏯→🦌 奈良→🏯",hotel:"京都",
+    note:"📦 今晚发宅急便！大行李箱→山中湖酒店（¥2,000），只带小包去神户",
+    summary:{transport:"¥1,520",hotel:"京都（连住）"},
+    items:[
+      {time:"8:30-9:15",activity:"🚃 京都→近铁奈良",detail:"近铁急行 45min",transport:"¥760",cost:""},
+      {time:"9:30-11:00",activity:"🦌 奈良公园",detail:"喂鹿（鹿仙贝¥200）",transport:"步行",cost:"¥200"},
+      {time:"11:00-12:00",activity:"⛩️ 春日大社 ¥500",detail:"",transport:"步行",cost:"¥500"},
+      {time:"12:00-13:00",activity:"🍜 午餐",detail:"柿叶寿司/奈良渍",transport:"",cost:""},
+      {time:"13:00-14:30",activity:"🏔️ 若草山 ¥150",detail:"山顶俯瞰奈良全景（上山20min）",transport:"步行",cost:"¥150"},
+      {time:"14:30-16:00",activity:"🏘️ 奈良町散步",detail:"大佛布丁+传统町屋",transport:"步行",cost:""},
+      {time:"16:00-16:45",activity:"🚃 奈良→京都",transport:"¥760",cost:""},
+      {time:"晚上",activity:"📦 发宅急便",detail:"大行李运往山中湖酒店（8/1入住时到达）",transport:"¥2,000",cost:""},
+    ]
+  },
+  {
+    day:4,date:"7/30",weekday:"四",emoji:"🏯",title:"京都Day3·洛北：三千院·贵船",
+    location:"🏯 京都（洛北）",hotel:"京都 3晚（连住）",
+    note:"住在京都不用搬行李，轻松玩洛北！三千院苔庭→贵船川床料理（夏季限定）。📦 今晚发宅急便大行李→山中湖酒店（8/2到着）",
+    summary:{transport:"~¥5,030",hotel:"京都（连住）"},
+    items:[
+      {time:"9:00-10:00",activity:"🚌 京都站→大原",detail:"京都巴士17系统 1h",transport:"¥580",cost:""},
+      {time:"10:00-11:30",activity:"🏯 三千院 ¥700",detail:"苔庭·国宝阿弥陀如来像·聚碧园",transport:"",cost:"¥700"},
+      {time:"11:30-12:00",activity:"🚕 大原→贵船",detail:"出租车30min（山路捷径）",transport:"~¥3,000",cost:""},
+      {time:"12:00-14:00",activity:"⛩️ 贵船神社·川床料理",detail:"🍜 夏季限定！在溪流上吃饭",transport:"",cost:""},
+      {time:"14:00-15:00",activity:"🚃 贵船→出町柳→京都站",detail:"叡山电铁+地铁乌丸线",transport:"¥690+¥260",cost:""},
+      {time:"15:00-",activity:"🏨 自由时间",detail:"河原町逛逛/回酒店休息",transport:"",cost:""},
+      {time:"晚上",activity:"📦 发宅急便",detail:"大行李→山中湖酒店（8/2入住时到着）",transport:"¥2,000",cost:""},
+    ]
+  },
+  {
+    day:5,date:"7/31",weekday:"五",emoji:"🥩",title:"神户一日畅游",
+    location:"🏯 京都→🚢 神户",hotel:"神户 2晚（连住）",
+    note:"退房后轻装去神户（大行李已宅急便送走）→北野异人馆→神户牛→须磨Sea World→六甲日落夜景",
+    summary:{transport:"~¥3,560",hotel:"神户 2晚（连住）"},
+    items:[
+      {time:"8:30-9:30",activity:"🚃 京都→三宫（神户）",detail:"JR新快速 55min",transport:"¥1,100",cost:""},
+      {time:"9:30-10:00",activity:"🏨 酒店放行李/存包",detail:"三宫站附近",transport:"",cost:""},
+      {time:"10:00-11:30",activity:"🏠 北野异人馆街",detail:"异国建筑群·风见鸡馆等",transport:"步行",cost:""},
+      {time:"12:00-13:30",activity:"🥩 神户牛肉午餐！",detail:"三宫/元町午市套餐（比晚餐便宜50%）",transport:"",cost:"¥4,000~8,000"},
+      {time:"13:30-14:00",activity:"🚃 三宫→须磨",detail:"JR快速 10min",transport:"¥230",cost:""},
+      {time:"14:00-16:30",activity:"🐬 神户须磨Sea World",detail:"虎鲸·海豚表演，约2~3h",transport:"¥230回程",cost:"¥3,300"},
+      {time:"16:30-17:00",activity:"🚃 须磨→三宫→六甲",detail:"巴士到六甲缆车口",transport:"¥230+¥600",cost:""},
+      {time:"17:00-17:30",activity:"🚡 六甲山上山",detail:"",transport:"¥600",cost:""},
+      {time:"17:30-18:40",activity:"🌅 山顶逛+等日落",detail:"百万美元夜景准备！",transport:"",cost:""},
+      {time:"18:40",activity:"🌇 日落！",detail:"日本三大夜景之一",highlight:true},
+      {time:"19:00-20:00",activity:"🌃 百万美元夜景",detail:"",transport:"",cost:""},
+      {time:"20:00-20:30",activity:"🚡🚌 下山回酒店",transport:"",cost:"¥600"},
+    ]
+  },
+  {
+    day:6,date:"8/1",weekday:"六",emoji:"🏝️",title:"淡路岛一日游",
+    location:"🚢 神户→🏝️ 淡路岛→🚢 神户",hotel:"神户（连住）",
+    note:"从神户三宫坐高速巴士仅50min即可到达淡路岛",
+    summary:{transport:"~¥2,400",hotel:"神户（连住）"},
+    items:[
+      {time:"8:30-9:30",activity:"🚌 三宫→淡路梦舞台",detail:"高速巴士 50min",transport:"~¥1,200",cost:""},
+      {time:"9:30-12:00",activity:"✨ 淡路梦舞台 ¥1,500",detail:"安藤忠雄建筑+奇迹之星温室花园+海景",transport:"",cost:"¥1,500"},
+      {time:"12:00-13:00",activity:"🍜 午餐",detail:"淡路牛丼 or 海鲜",transport:"",cost:"¥1,500"},
+      {time:"13:00-14:30",activity:"🦖 二次元之森 or 🥞幸福松饼",detail:"火影/哥吉拉 or 网红松饼",transport:"",cost:""},
+      {time:"14:30-15:30",activity:"🚌 淡路岛→三宫",transport:"",cost:"¥1,200"},
+      {time:"15:30-",activity:"☕️ 神户自由时间",detail:"元町中华街/海滨散步",transport:"",cost:""},
+    ]
+  },
+  {
+    day:7,date:"8/2",weekday:"日",emoji:"🚄",title:"神户→富士山",
+    location:"🚢 神户→🚄→🗻 山中湖",hotel:"山中湖 2晚（连住）",
+    note:"最长移动日：新干线2h+巴士1h。📦 宅急便行李已到山中湖酒店✅",
+    summary:{transport:"¥12,860",hotel:"山中湖 2晚（连住）"},
+    items:[
+      {time:"8:00-8:30",activity:"🚃 三宫→新神户站",transport:"¥200",cost:""},
+      {time:"8:30-10:30",activity:"🚄 新干线 Hikari",detail:"新神户→三岛站（2小时）",transport:"¥11,000",cost:""},
+      {time:"11:00-12:00",activity:"🚌 三岛站→山中湖",detail:"富士急巴士 1小时",transport:"¥1,660",cost:""},
+      {time:"12:00",activity:"🏨 酒店入住",detail:"📦 宅急便行李已到！",transport:"",cost:""},
+      {time:"13:00-17:00",activity:"🚲 租电动自行车环湖",detail:"自由探索山中湖",transport:"~¥2,000",cost:""},
+      {time:"17:00-19:00",activity:"🌅 湖边看富士山日落",detail:"",transport:"",cost:""},
+      {time:"19:00",activity:"♨️ 温泉+晚餐",detail:"",transport:"",cost:""},
+    ]
+  },
+  {
+    day:8,date:"8/3",weekday:"一",emoji:"🚲",title:"山中湖骑行畅游",
+    location:"🗻 山中湖",hotel:"山中湖（连住）",
+    note:"早起看逆富士！富士山倒映湖面",
+    summary:{transport:"",hotel:"山中湖（连住）"},
+    items:[
+      {time:"5:00-6:00",activity:"🌅 早起看逆富士！",detail:"夏天5点左右日出",highlight:true},
+      {time:"8:00-12:00",activity:"🚲 电动自行车环湖",detail:"往旭日丘方向",transport:"",cost:""},
+      {time:"12:00-14:00",activity:"🍜 午餐+休息",detail:"",transport:"",cost:""},
+      {time:"14:00-17:00",activity:"🏞️ 忍野八海（免费）",detail:"或去河口湖逛逛",transport:"",cost:""},
+      {time:"17:00-19:00",activity:"🌇 富士山日落+♨️温泉",detail:"",transport:"",cost:""},
+    ]
+  },
+  {
+    day:9,date:"8/4",weekday:"二",emoji:"🏔️",title:"大室山→热海·温泉",
+    location:"🗻→🏔️ 大室山→♨️ 热海",hotel:"热海 2晚（连住）",
+    note:"退房后带行李→大室山→热海入住。明后天天都在热海，看花火🎆",
+    summary:{transport:"~¥4,890",hotel:"热海 2晚（连住）"},
+    items:[
+      {time:"8:00-9:00",activity:"🚌 山中湖→三岛站",transport:"富士急巴士",cost:"¥1,660"},
+      {time:"9:00-9:15",activity:"🚃 三岛→热海",detail:"JR 15min",transport:"¥330",cost:""},
+      {time:"9:15-9:45",activity:"🏨 热海酒店放行李/办入住",transport:"",cost:""},
+      {time:"10:00-10:50",activity:"🚃 热海→伊豆高原站",detail:"JR伊东线",transport:"¥1,020",cost:""},
+      {time:"10:50-11:10",activity:"🚌 伊豆高原站→大室山",detail:"巴士 17min",transport:"¥430",cost:""},
+      {time:"11:10-13:00",activity:"🏔️ 大室山 🚡¥1,000",detail:"山顶环形步道25min，360度全景",highlight:true},
+      {time:"13:00-14:00",activity:"🚌🚃 大室山→热海",detail:"回程",transport:"¥1,450",cost:""},
+      {time:"14:00-",activity:"♨️ 热海自由",detail:"温泉/Sun Beach散步/来宫神社",transport:"",cost:""},
+    ]
+  },
+  {
+    day:10,date:"8/5",weekday:"三",emoji:"🎆",title:"热海花火大会",
+    location:"♨️ 热海🎆",hotel:"热海（连住）",
+    note:"🎆 花火20:15！今天全天在热海，下午去Sun Beach占位！",
+    summary:{transport:"",hotel:"热海（连住）"},
+    items:[
+      {time:"上午",activity:"♨️ 睡到自然醒+温泉",detail:"前几天累了，慢下来享受",transport:"",cost:""},
+      {time:"下午",activity:"🏯 热海补逛",detail:"热海城/来宫神社/银座商店街，挑想去的",transport:"",cost:""},
+      {time:"17:00-18:00",activity:"🎒 Sun Beach占位",detail:"铺野餐垫！8月旺季人超多",transport:"",cost:""},
+      {time:"18:00-20:00",activity:"🍢 夜市小吃摊+散步",detail:"边吃边等花火",transport:"",cost:""},
+      {time:"20:15-20:40",activity:"🎆🎆🎆 热海花火大会！",detail:"约8,000发，最后是海上大空中烟花",highlight:true},
+      {time:"20:45",activity:"🏨 回酒店",detail:"住热海步行就回 ✅",transport:"",cost:""},
+    ]
+  },
+  {
+    day:11,date:"8/6",weekday:"四",emoji:"🗼",title:"热海→东京→Shibuya Sky",
+    location:"♨️→🚄→🗼 东京",hotel:"东京（涩谷/东京站附近）",
+    note:"⚡ 提前预约Shibuya Sky（16:00-17:00时段），东京地铁24h券¥800",
+    summary:{transport:"¥3,560+¥800",hotel:"东京 1晚"},
+    items:[
+      {time:"9:00-10:00",activity:"🚄 热海→东京",detail:"新干线 50min（带行李走）",transport:"¥3,560",cost:""},
+      {time:"10:00-10:30",activity:"🛅 东京站寄放行李",detail:"",transport:"",cost:""},
+      {time:"10:30-12:00",activity:"🏮 浅草寺·雷门",detail:"地铁银座线",transport:"",cost:""},
+      {time:"12:00-13:30",activity:"🍜 午餐",detail:"浅草今半寿喜烧/鳗鱼饭",transport:"",cost:""},
+      {time:"13:30-15:00",activity:"🎮 秋叶原",detail:"电器街+动漫",transport:"地铁日比谷线",cost:""},
+      {time:"15:00-16:00",activity:"🚦 涩谷十字路口",detail:"忠犬八公像打卡",transport:"",cost:""},
+      {time:"16:30",activity:"🗼 Shibuya Sky入场",detail:"⚡提前预约！16:00-17:00时段",highlight:true},
+      {time:"16:30-18:40",activity:"🌇 日落+黄昏+夜景",detail:"魔法时刻最震撼",transport:"",cost:""},
+      {time:"19:00-20:00",activity:"🍜 涩谷晚餐",detail:"",transport:"",cost:""},
+      {time:"20:00-",activity:"🌃 新宿看一眼夜景",detail:"可选",transport:"",cost:""},
+    ]
+  },
+  {
+    day:12,date:"8/7",weekday:"五",emoji:"✈️",title:"成田→名古屋→上海",
+    location:"🗼 东京→🛫 名古屋→🛬 上海",hotel:"✈️ 回家",
+    note:"名古屋有约5小时，可快闪2-3个景点",
+    summary:{transport:"~¥7,000+",hotel:"-"},
+    items:[
+      {time:"7:30-8:30",activity:"🚄 东京→成田机场",detail:"N'EX/Skyliner",transport:"¥3,000",cost:""},
+      {time:"9:00-10:00",activity:"✅ Check-in / 安检",detail:"",transport:"",cost:""},
+      {time:"10:30-11:40",activity:"✈️ 成田→名古屋",detail:"",transport:"¥5,000~",cost:""},
+      {time:"12:00-17:00",activity:"🏙️ 名古屋半日游",detail:"名古屋城→大须观音→名古屋美食（推荐：鳗鱼三吃/味噌猪排/鸡翅）",transport:"",cost:""},
+      {time:"17:30-18:00",activity:"🚃 名古屋→中部机场",detail:"名铁 30min",transport:"¥1,230",cost:""},
+      {time:"20:45",activity:"✈️ 名古屋→上海",detail:"旅行结束 🎉",highlight:true},
+    ]
+  }
+];
+
+// ====== STATE ======
+let currentDay = 0;
+let deferredPrompt = null;
+
+// ====== RENDER ======
+function render(){
+  renderTabs();
+  renderDays();
+  goToDay(currentDay);
+  updateNav();
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = DAYS.map((d,i)=>{
+    const active = i === currentDay ? 'active' : '';
+    return `<div class="tab ${active}" data-idx="${i}" onclick="goToDay(${i})">
+      <span class="tab-emoji">${d.emoji}</span>
+      <span class="day-num">Day ${d.day}</span>
+      <span class="day-date">${d.date}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderDays(){
+  const slider = document.getElementById('contentSlider');
+  slider.innerHTML = DAYS.map((d)=>{
+    const items = d.items.map((it,idx)=>{
+      const cls = it.highlight ? 'highlight' : '';
+      const transport = it.transport ? `<span class="item-transport">🚃 ${it.transport}</span>` : '';
+      const cost = it.cost ? `<span class="item-cost">💰 ${it.cost}</span>` : '';
+      return `<div class="timeline-item ${cls}">
+        ${it.time ? `<div class="item-time">${it.time}</div>` : ''}
+        <div class="item-activity">${it.activity}</div>
+        ${it.detail ? `<div class="item-detail">${it.detail}</div>` : ''}
+        <div>${transport}${cost}</div>
+      </div>`;
+    }).join('');
+
+    const summaryTags = [];
+    if(d.summary.transport) summaryTags.push(`<span class="tag transport">🚃 ${d.summary.transport}</span>`);
+    if(d.summary.hotel) summaryTags.push(`<span class="tag hotel">🏨 ${d.summary.hotel}</span>`);
+    const sumHTML = summaryTags.length ? `<div class="day-summary">${summaryTags.join('')}</div>` : '';
+
+    return `<div class="day-page">
+      <div class="day-header">
+        <div class="day-title"><span class="emoji">${d.emoji}</span> Day ${d.day} · ${d.date}（${d.weekday}）</div>
+        <div class="day-title" style="font-size:16px;margin-top:2px">${d.title}</div>
+        <div class="day-sub">
+          <span>📍 ${d.location}</span>
+        </div>
+      </div>
+      ${d.note ? `<div class="schedule-note">💡 ${d.note.replace(/\n/g,'<br>')}</div>` : ''}
+      <div class="timeline">${items}</div>
+      ${sumHTML}
+    </div>`;
+  }).join('');
+}
+
+function goToDay(idx){
+  if(idx < 0 || idx >= DAYS.length) return;
+  currentDay = idx;
+  const slider = document.getElementById('contentSlider');
+  slider.style.transform = `translateX(-${idx * 100}%)`;
+  document.getElementById('dayProgress').textContent = `Day ${idx+1} / 12 · ${DAYS[idx].title}`;
+
+  // Update tabs
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', i === idx);
+    if(i === idx) t.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  });
+  updateNav();
+}
+
+function updateNav(){
+  document.getElementById('prevBtn').disabled = currentDay === 0;
+  document.getElementById('nextBtn').disabled = currentDay === DAYS.length - 1;
+  document.querySelector('#navInfo strong').textContent = `Day ${currentDay+1}`;
+}
+
+// ====== SWIPE ======
+const wrapper = document.getElementById('contentWrapper');
+let touchStartX = 0, touchEndX = 0;
+wrapper.addEventListener('touchstart',e=>{touchStartX = e.changedTouches[0].screenX}, {passive:true});
+wrapper.addEventListener('touchend',e=>{
+  touchEndX = e.changedTouches[0].screenX;
+  const diff = touchStartX - touchEndX;
+  if(Math.abs(diff) > 40){
+    if(diff > 0 && currentDay < DAYS.length - 1) goToDay(currentDay + 1);
+    else if(diff < 0 && currentDay > 0) goToDay(currentDay - 1);
+  }
+}, {passive:true});
+
+// ====== NAV ======
+document.getElementById('prevBtn').addEventListener('click',()=>goToDay(currentDay-1));
+document.getElementById('nextBtn').addEventListener('click',()=>goToDay(currentDay+1));
+
+// Keyboard nav
+document.addEventListener('keydown',e=>{
+  if(e.key === 'ArrowLeft' && currentDay > 0) goToDay(currentDay-1);
+  if(e.key === 'ArrowRight' && currentDay < DAYS.length-1) goToDay(currentDay+1);
+});
+
+// ====== INSTALL PWA ======
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+
+document.getElementById('installBtn').addEventListener('click',async ()=>{
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    if(result.outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
+    deferredPrompt = null;
+  } else {
+    showToast('📲 iOS：用Safari打开→分享按钮→添加到主屏幕');
+  }
+});
+document.getElementById('installClose').addEventListener('click',()=>{
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+// Show install hint on iOS
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+if(isIOS && !window.matchMedia('(display-mode: standalone)').matches){
+  // Show later after splash
+  setTimeout(()=>{
+    document.getElementById('installBanner').classList.add('show');
+    document.querySelector('#installBanner .text').textContent = '📲 用Safari打开→分享→添加到主屏幕';
+  }, 2000);
+}
+
+// ====== TOAST ======
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ====== SPLASH ======
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.getElementById('splash').classList.add('hide');
+  }, 800);
+});
+
+// ====== INIT ======
+document.addEventListener('DOMContentLoaded',render);
+
+// ====== SERVICE WORKER (for offline standalone app) ======
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
