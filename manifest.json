@@ -2,7 +2,7 @@
   "name": "日本之旅 2026",
   "short_name": "日本之旅",
   "description": "12天关西·富士·热海·东京完整行程",
-  "start_url": "app.html",
+  "start_url": "travel.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f0f1a",

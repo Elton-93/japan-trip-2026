@@ -1,5 +1,5 @@
-const CACHE = 'japan-trip-v3';
-const URLS = ['index.html', 'app.html', 'manifest.json'];
+const CACHE = 'japan-trip-v4';
+const URLS = ['index.html', 'travel.html', 'manifest.json'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
