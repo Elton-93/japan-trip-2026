@@ -1,4 +1,4 @@
-const CACHE = 'japan-trip-v4';
+const CACHE = 'japan-trip-v5';
 const URLS = ['index.html', 'travel.html', 'manifest.json'];
 
 self.addEventListener('install', e => {
